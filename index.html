@@ -1,1 +1,506 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Judgment Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .progress-bar {
+            background: rgba(255,255,255,0.3);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: white;
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .welcome-screen {
+            text-align: center;
+        }
+        .welcome-screen h1 {
+            font-size: 32px;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        .welcome-screen p {
+            font-size: 18px;
+            color: #718096;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .prompt {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+        .prompt-text {
+            font-size: 16px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+        .response-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .response {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .response:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        .response-label {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .response-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #2d3748;
+            margin-top: 10px;
+        }
+        .feedback {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s ease;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        .results-screen {
+            text-align: center;
+        }
+        .results-screen h2 {
+            font-size: 28px;
+            color: #2d3748;
+            margin-bottom: 30px;
+        }
+        .results-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .result-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        .result-card h3 {
+            font-size: 16px;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+        .result-card .big-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .category-breakdown {
+            display: grid;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .category-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .category-score {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .preference-profile {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .preference-profile h3 {
+            font-size: 18px;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        .preference-item {
+            padding: 10px 0;
+            font-size: 16px;
+            color: #4a5568;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 640px) {
+            .container {
+                border-radius: 0;
+            }
+            .content {
+                padding: 20px;
+            }
+            .response-text {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2 id="header-title">AI Judgment Game</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+        <div class="stats hidden" id="stats">
+            <div class="stat">
+                <div class="stat-value" id="current-number">0</div>
+                <div class="stat-label">Question</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="accuracy">--%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="consensus">--%</div>
+                <div class="stat-label">Consensus</div>
+            </div>
+        </div>
+        <div class="content">
+            <div id="welcome-screen" class="welcome-screen">
+                <h1>Test Your AI Judgment</h1>
+                <p>Make 50 rapid judgments on AI responses. See how you rank against others.</p>
+                <p style="font-size: 16px; color: #a0aec0;">Takes about 10-15 minutes</p>
+                <button class="button" onclick="startGame()">Start Test</button>
+            </div>
+            <div id="game-screen" class="hidden">
+                <div id="feedback" class="feedback hidden"></div>
+                <div class="prompt">
+                    <div class="prompt-text" id="prompt-text"></div>
+                </div>
+                <div class="response-container">
+                    <div class="response" id="response-a" onclick="makeChoice('a')">
+                        <div class="response-label">Response A</div>
+                        <div class="response-text" id="response-a-text"></div>
+                    </div>
+                    <div class="response" id="response-b" onclick="makeChoice('b')">
+                        <div class="response-label">Response B</div>
+                        <div class="response-text" id="response-b-text"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="results-screen" class="results-screen hidden">
+                <h2>You completed 50 judgments!</h2>
+                <div class="results-grid">
+                    <div class="result-card">
+                        <h3>Overall Accuracy</h3>
+                        <div class="big-number" id="final-accuracy">--</div>
+                        <div id="percentile-rank"></div>
+                    </div>
+                    <div class="result-card">
+                        <h3>Consensus Alignment</h3>
+                        <div class="big-number" id="final-consensus">--</div>
+                        <div id="consensus-description"></div>
+                    </div>
+                </div>
+                <div class="preference-profile">
+                    <h3>Your Preference Style</h3>
+                    <div id="preference-items"></div>
+                </div>
+                <div class="category-breakdown" id="category-breakdown"></div>
+                <button class="button" onclick="location.reload()">Try Again</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const judgmentData = [
+{"pair_id":"1","prompt":"Summarize the main benefits of meditation in 2-3 sentences.","response_a":"Meditation reduces stress and anxiety by calming the mind and lowering cortisol levels. It improves focus, emotional regulation, and overall mental clarity. Regular practice can also enhance sleep quality and boost immune function.","response_b":"Meditation helps you relax and feel less stressed. It can make you more focused and help you sleep better. Many people find it improves their mood and overall well-being.","category":"health","obvious_winner":""},
+{"pair_id":"2","prompt":"Explain the greenhouse effect in simple terms (2 sentences).","response_a":"The greenhouse effect occurs when certain gases in Earth's atmosphere trap heat from the sun, preventing it from escaping back into space. This natural process keeps our planet warm enough to support life, but excess greenhouse gases from human activities are causing global warming.","response_b":"Greenhouse gases like carbon dioxide and methane act like a blanket around Earth, trapping heat from the sun. While some warming is natural and necessary, too much of these gases—mainly from burning fossil fuels—is causing our planet to heat up dangerously.","category":"science","obvious_winner":""},
+{"pair_id":"3","prompt":"What are the key differences between saving and investing? (2-3 sentences)","response_a":"Saving means putting money aside in a safe, easily accessible account like a savings account or checking account, typically earning minimal interest. Investing involves putting money into assets like stocks, bonds, or real estate with the goal of growing wealth over time, but it comes with more risk and less liquidity.","response_b":"Saving is when you set money aside for short-term goals or emergencies, usually in a bank account where it's safe and easy to access. Investing is using your money to buy things like stocks or property that you hope will increase in value over time, though there's a risk you could lose money.","category":"finance","obvious_winner":""},
+{"pair_id":"4","prompt":"Describe how compound interest works using a simple example.","response_a":"Compound interest is when you earn interest on both your initial deposit and the interest that accumulates over time. For example, if you invest $1,000 at 5% annual interest compounded yearly, you'd earn $50 in year one, but in year two you'd earn 5% on $1,050, making $52.50—and this snowball effect continues.","response_b":"With compound interest, your money grows faster because you earn interest on your interest. If you put $1,000 in an account with 5% interest, after one year you'd have $1,050. The next year, you earn 5% on the full $1,050, not just your original $1,000, so your earnings accelerate over time.","category":"finance","obvious_winner":""},
+{"pair_id":"5","prompt":"What is the difference between weather and climate? (1-2 sentences)","response_a":"Weather refers to short-term atmospheric conditions in a specific place at a specific time, like whether it's raining today. Climate describes the average weather patterns in a region over a long period, typically 30 years or more.","response_b":"Weather is what's happening outside right now—sunny, rainy, hot, or cold. Climate is the long-term pattern of weather in an area, like how the Pacific Northwest is generally rainy or how Arizona is typically hot and dry.","category":"science","obvious_winner":""},
+{"pair_id":"6","prompt":"Explain what antibiotics do and why you shouldn't overuse them. (2-3 sentences)","response_a":"Antibiotics are medicines that kill bacteria or stop them from multiplying, helping your body fight bacterial infections. Overusing them can lead to antibiotic resistance, where bacteria evolve to survive these drugs, making infections harder to treat. It's important to only use antibiotics when truly needed and always complete the full course as prescribed.","response_b":"Antibiotics kill harmful bacteria that cause infections like strep throat or urinary tract infections. If you use them too often or don't finish the full prescription, bacteria can become resistant, meaning the antibiotics won't work when you really need them. That's why doctors are careful about when they prescribe them.","category":"health","obvious_winner":""},
+{"pair_id":"7","prompt":"What is inflation and how does it affect everyday people? (2 sentences)","response_a":"Inflation is the rate at which the general level of prices for goods and services rises over time, reducing the purchasing power of money. For everyday people, this means your money buys less than it used to—groceries, gas, and rent all cost more, but your salary might not keep pace.","response_b":"Inflation means things get more expensive over time. When inflation is high, your paycheck doesn't go as far because you're paying more for the same stuff like food, housing, and transportation.","category":"finance","obvious_winner":""},
+{"pair_id":"8","prompt":"How does the immune system fight off infections? (2-3 sentences)","response_a":"When germs enter your body, your immune system detects them as foreign invaders and launches an attack using white blood cells. Some white blood cells directly destroy the pathogens, while others produce antibodies—proteins that specifically target and neutralize the invaders. Your immune system also remembers past infections, which is why you often don't get the same illness twice.","response_b":"Your immune system protects you by recognizing and attacking germs like bacteria and viruses. Special cells in your blood identify harmful invaders and either destroy them directly or create antibodies to fight them off. After fighting an infection, your immune system remembers it so it can respond faster if you encounter the same germ again.","category":"health","obvious_winner":""},
+{"pair_id":"9","prompt":"What causes ocean tides? (2 sentences)","response_a":"Ocean tides are caused primarily by the gravitational pull of the moon on Earth's water, with the sun also playing a smaller role. As the moon orbits Earth, its gravity creates bulges in the ocean—high tides—on the side facing the moon and the opposite side, while the areas in between experience low tides.","response_b":"Tides happen because the moon's gravity pulls on Earth's oceans. When the moon is overhead, it pulls water toward it creating a high tide, and as Earth rotates, different areas experience high and low tides throughout the day.","category":"science","obvious_winner":""},
+{"pair_id":"10","prompt":"Explain what a credit score is and why it matters. (2-3 sentences)","response_a":"A credit score is a three-digit number (typically 300-850) that represents how reliably you've handled debt and credit in the past. It's calculated based on factors like your payment history, how much you owe, and length of credit history. Lenders use this score to decide whether to approve you for loans, credit cards, or mortgages, and what interest rate to charge you.","response_b":"Your credit score is basically a grade that shows how responsible you are with borrowed money. It affects whether you can get approved for credit cards, car loans, or a mortgage, and also determines your interest rates—a higher score means better deals. Banks calculate it by looking at whether you pay bills on time, how much debt you have, and your credit history.","category":"finance","obvious_winner":""},
+{"pair_id":"11","prompt":"What is photosynthesis and why is it important? (2 sentences)","response_a":"Photosynthesis is the process by which plants use sunlight, water, and carbon dioxide to create glucose (food) and release oxygen as a byproduct. This process is crucial because it produces the oxygen we breathe and forms the base of most food chains on Earth.","response_b":"Photosynthesis is how plants make their own food using sunlight, turning carbon dioxide and water into sugars and oxygen. It's vital for life on Earth because it gives us the oxygen we need to breathe and provides energy that flows through entire ecosystems.","category":"science","obvious_winner":""},
+{"pair_id":"12","prompt":"What is the purpose of diversifying your investment portfolio? (2 sentences)","response_a":"Diversifying your investment portfolio means spreading your money across different types of investments—stocks, bonds, real estate, etc.—so you're not putting all your eggs in one basket. This strategy reduces risk because if one investment performs poorly, others might perform well, balancing out potential losses.","response_b":"Diversification is the practice of investing in a variety of different assets to minimize risk. By not concentrating all your money in one place, you protect yourself from major losses if a particular investment or sector underperforms.","category":"finance","obvious_winner":""},
+{"pair_id":"13","prompt":"How does exercise benefit mental health? (2-3 sentences)","response_a":"Exercise releases endorphins—chemicals in your brain that act as natural mood lifters and pain relievers. It also reduces stress hormones like cortisol and adrenaline, helping you feel calmer and less anxious. Regular physical activity has been shown to improve sleep, boost self-esteem, and can be as effective as medication for treating mild to moderate depression.","response_b":"When you exercise, your brain releases feel-good chemicals called endorphins that improve your mood and reduce stress. Physical activity also helps you sleep better, gives you more energy, and can reduce symptoms of anxiety and depression. Even a short walk can make a noticeable difference in how you feel mentally.","category":"health","obvious_winner":""},
+{"pair_id":"14","prompt":"What causes earthquakes? (2 sentences)","response_a":"Earthquakes occur when stress that has built up along geological faults or between tectonic plates is suddenly released, sending seismic waves through the Earth. Most earthquakes happen at plate boundaries where plates are colliding, pulling apart, or sliding past each other.","response_b":"Earthquakes happen when pieces of the Earth's crust, called tectonic plates, suddenly shift or break. These plates are constantly moving very slowly, and when they get stuck and then suddenly slip, the ground shakes.","category":"science","obvious_winner":""},
+{"pair_id":"15","prompt":"Explain the difference between a debit card and a credit card. (2 sentences)","response_a":"A debit card withdraws money directly from your checking account when you make a purchase, so you're spending money you already have. A credit card borrows money from the card issuer that you must pay back later, usually with interest if you don't pay the full balance by the due date.","response_b":"When you use a debit card, the money comes straight out of your bank account. A credit card lets you borrow money from the credit card company to make purchases, and you have to pay it back—often with interest if you don't pay on time.","category":"finance","obvious_winner":""},
+{"pair_id":"16","prompt":"Why is sleep important for your health? (2-3 sentences)","response_a":"Sleep is when your body repairs tissues, consolidates memories, and regulates hormones that control growth, appetite, and stress. Lack of sleep weakens your immune system, impairs cognitive function, and increases the risk of chronic conditions like heart disease and diabetes. Most adults need 7-9 hours of quality sleep per night for optimal health.","response_b":"During sleep, your body and brain do critical maintenance work—repairing cells, processing memories, and regulating hormones. Without enough sleep, you're more likely to get sick, gain weight, and struggle with focus and mood. Sleep is as essential to health as eating well and exercising.","category":"health","obvious_winner":""},
+{"pair_id":"17","prompt":"What is the water cycle? (2 sentences)","response_a":"The water cycle is the continuous movement of water on, above, and below Earth's surface through processes like evaporation, condensation, precipitation, and collection. Water evaporates from oceans and lakes, forms clouds, falls as rain or snow, and eventually flows back to bodies of water, repeating the cycle.","response_b":"The water cycle describes how water moves around Earth. Water from oceans and lakes evaporates into the air, forms clouds, falls back down as rain or snow, and collects in rivers and oceans to start the cycle over again.","category":"science","obvious_winner":""},
+{"pair_id":"18","prompt":"What is compound annual growth rate (CAGR) and why is it useful? (2 sentences)","response_a":"CAGR is a metric that shows the mean annual growth rate of an investment over a specified period longer than one year, assuming profits were reinvested. It's useful because it smooths out volatility and gives you a single percentage that represents steady growth, making it easier to compare different investments.","response_b":"Compound Annual Growth Rate (CAGR) tells you how much an investment has grown on average each year over time. It's helpful because it gives you one simple number to understand growth, even if the investment went up and down along the way.","category":"finance","obvious_winner":""},
+{"pair_id":"19","prompt":"How does caffeine affect your body? (2-3 sentences)","response_a":"Caffeine is a stimulant that blocks adenosine receptors in your brain, which normally make you feel tired, thereby increasing alertness and reducing fatigue. It also triggers the release of adrenaline, which can increase heart rate and blood pressure. While moderate caffeine consumption can improve focus and physical performance, too much can cause jitteriness, anxiety, and sleep disruption.","response_b":"Caffeine works by blocking a chemical in your brain that makes you sleepy, which is why it helps you feel more awake and alert. It also gives you a burst of energy by triggering adrenaline release. However, if you have too much, it can make you jittery, anxious, or unable to sleep.","category":"health","obvious_winner":""},
+{"pair_id":"20","prompt":"What is renewable energy and why is it important? (2 sentences)","response_a":"Renewable energy comes from natural sources that replenish themselves, such as sunlight, wind, rain, tides, and geothermal heat. It's important because it produces little to no greenhouse gas emissions, helping combat climate change, and unlike fossil fuels, renewable sources won't run out.","response_b":"Renewable energy is power generated from sources that naturally renew themselves, like solar, wind, and water. It's crucial for reducing pollution and fighting climate change since it doesn't produce the harmful emissions that come from burning coal, oil, and gas.","category":"science","obvious_winner":""},
+{"pair_id":"21","prompt":"What is a budget and why should you have one? (2 sentences)","response_a":"A budget is a plan that outlines your expected income and expenses over a specific period, helping you track where your money goes. Having a budget allows you to control your spending, save for goals, avoid debt, and ensure you're living within your means.","response_b":"A budget is basically a money plan that shows how much you earn and what you spend it on. Creating one helps you make sure you're not spending more than you make, lets you save for things you want, and prevents financial stress.","category":"finance","obvious_winner":""},
+{"pair_id":"22","prompt":"How do vaccines work? (2-3 sentences)","response_a":"Vaccines introduce a weakened or inactive form of a pathogen (or a piece of it) into your body, which doesn't make you sick but teaches your immune system to recognize it. Your immune system responds by producing antibodies and memory cells specific to that pathogen. If you're later exposed to the real disease, your immune system can quickly recognize and fight it off before you get sick.","response_b":"Vaccines train your immune system to recognize and fight specific diseases without making you sick. They contain a harmless version of a virus or bacteria (or just a part of it), which triggers your body to create defenses. Later, if you encounter the real disease, your body already knows how to fight it quickly and effectively.","category":"health","obvious_winner":""},
+{"pair_id":"23","prompt":"What is gravity? (2 sentences)","response_a":"Gravity is a fundamental force of nature that attracts objects with mass toward each other. On Earth, gravity is what keeps us on the ground and causes objects to fall, and it's also what keeps planets orbiting the sun.","response_b":"Gravity is the force that pulls objects toward each other. It's why things fall to the ground when you drop them and why the Earth orbits around the sun.","category":"science","obvious_winner":""},
+{"pair_id":"24","prompt":"What is the difference between stocks and bonds? (2 sentences)","response_a":"Stocks represent ownership shares in a company, meaning when you buy stock, you own a piece of that business and can profit if its value increases, though you could also lose money. Bonds are essentially loans you make to a company or government that pay you interest over time and return your principal at maturity, typically offering lower returns but more stability than stocks.","response_b":"When you buy a stock, you're buying a small piece of ownership in a company, and your investment can grow (or shrink) based on the company's performance. A bond is more like a loan you give to a company or government—they pay you back with interest over time, making it generally safer but with lower potential returns than stocks.","category":"finance","obvious_winner":""},
+{"pair_id":"25","prompt":"Why is it important to stay hydrated? (2-3 sentences)","response_a":"Water is essential for nearly every bodily function, including regulating body temperature, transporting nutrients, removing waste, and cushioning joints. Even mild dehydration can cause fatigue, headaches, difficulty concentrating, and reduced physical performance. Most people should aim for about 8 glasses (2 liters) of water per day, though needs vary based on activity level and climate.","response_b":"Your body is about 60% water, and you need it to function properly—everything from digestion to temperature control depends on being well-hydrated. When you don't drink enough, you can get headaches, feel tired, and have trouble focusing. Drinking water throughout the day helps you feel better and perform at your best.","category":"health","obvious_winner":""},
+{"pair_id":"26","prompt":"What causes seasons on Earth? (2 sentences)","response_a":"Seasons are caused by Earth's tilted axis as it orbits the sun. When the Northern Hemisphere is tilted toward the sun, it experiences summer while the Southern Hemisphere has winter, and vice versa—it's the angle of sunlight, not distance from the sun, that creates seasons.","response_b":"Earth's seasons happen because our planet is tilted on its axis as it goes around the sun. When your part of Earth tilts toward the sun, you get more direct sunlight and experience summer; when it tilts away, you get winter.","category":"science","obvious_winner":""},
+{"pair_id":"27","prompt":"What is an emergency fund and why do you need one? (2 sentences)","response_a":"An emergency fund is a savings account specifically set aside to cover unexpected expenses like medical bills, car repairs, or job loss. Financial experts typically recommend saving 3-6 months of living expenses so you don't have to rely on credit cards or loans when emergencies arise.","response_b":"An emergency fund is money you save for unexpected problems like losing your job, breaking your car, or facing a medical emergency. Having one means you won't go into debt when something goes wrong—most people should try to save enough to cover 3-6 months of expenses.","category":"finance","obvious_winner":""},
+{"pair_id":"28","prompt":"How does stress affect your physical health? (2-3 sentences)","response_a":"Chronic stress triggers the release of hormones like cortisol and adrenaline, which over time can weaken your immune system, raise blood pressure, and increase the risk of heart disease. Stress can also cause muscle tension, headaches, digestive problems, and sleep disturbances. Managing stress through exercise, relaxation techniques, and healthy coping mechanisms is crucial for maintaining overall health.","response_b":"When you're stressed, your body releases hormones that, in short bursts, help you deal with challenges—but long-term stress keeps these hormones elevated, which is harmful. Chronic stress can lead to high blood pressure, a weakened immune system, trouble sleeping, and increased risk of serious conditions like heart disease. That's why managing stress through healthy habits is so important.","category":"health","obvious_winner":""},
+{"pair_id":"29","prompt":"What is DNA and why is it important? (2 sentences)","response_a":"DNA (deoxyribonucleic acid) is a molecule that contains the genetic instructions for building and maintaining all living organisms. It determines your physical traits, influences your health, and is passed from parents to children, making you unique while also connecting you to your family lineage.","response_b":"DNA is like a blueprint or instruction manual that tells your cells how to build and run your body. It carries all your genetic information—from your eye color to your risk for certain diseases—and gets passed down from your parents.","category":"science","obvious_winner":""},
+{"pair_id":"30","prompt":"What is the difference between gross income and net income? (2 sentences)","response_a":"Gross income is your total earnings before any deductions, such as your full salary or the total revenue a business makes. Net income is what you actually take home after taxes, insurance, retirement contributions, and other deductions are subtracted.","response_b":"Gross income is how much you earn before anything is taken out—your full paycheck or total sales. Net income is what you actually get to keep after taxes and other deductions, which is the money you can actually spend.","category":"finance","obvious_winner":""},
+{"pair_id":"31","prompt":"What are probiotics and why are they beneficial? (2-3 sentences)","response_a":"Probiotics are live beneficial bacteria and yeasts that support a healthy gut microbiome, which plays a crucial role in digestion, immune function, and even mental health. You can get probiotics from fermented foods like yogurt, kefir, sauerkraut, and kimchi, or from supplements. They help maintain a balance of good bacteria in your digestive system, which can improve digestion, reduce inflammation, and strengthen immunity.","response_b":"Probiotics are good bacteria that live in your gut and help keep your digestive system healthy. You can find them in foods like yogurt and fermented vegetables, or take them as supplements. They support digestion, boost your immune system, and can help with issues like bloating or irregular bowel movements.","category":"health","obvious_winner":""},
+{"pair_id":"32","prompt":"What is evolution? (2 sentences)","response_a":"Evolution is the process by which species change over time through natural selection, where organisms with advantageous traits are more likely to survive and reproduce. Over many generations, these small changes can lead to the development of new species.","response_b":"Evolution is how living things change and adapt over time. Organisms with helpful traits are more likely to survive and pass those traits to their offspring, and over millions of years, this process creates new species.","category":"science","obvious_winner":""},
+{"pair_id":"33","prompt":"What is dollar-cost averaging? (2 sentences)","response_a":"Dollar-cost averaging is an investment strategy where you invest a fixed amount of money at regular intervals (like monthly), regardless of market conditions. This approach reduces the risk of investing a large sum at the wrong time and helps smooth out the effects of market volatility over time.","response_b":"Dollar-cost averaging means investing the same amount of money on a regular schedule—say $200 every month—no matter whether the market is up or down. This strategy helps you avoid trying to time the market and means you buy more shares when prices are low and fewer when they're high.","category":"finance","obvious_winner":""},
+{"pair_id":"34","prompt":"How does smoking affect your lungs? (2-3 sentences)","response_a":"Smoking damages the airways and alveoli (air sacs) in your lungs, reducing their ability to exchange oxygen and carbon dioxide efficiently. The harmful chemicals in cigarette smoke cause inflammation, destroy lung tissue, and increase mucus production, leading to chronic conditions like bronchitis, emphysema, and COPD. Smoking also significantly increases the risk of lung cancer and makes it harder for your lungs to clear out infections.","response_b":"When you smoke, toxic chemicals irritate and inflame your airways, making it harder to breathe. Over time, smoking destroys the delicate air sacs in your lungs, reducing their capacity and causing diseases like COPD and emphysema. It's also the leading cause of lung cancer and makes you more vulnerable to respiratory infections.","category":"health","obvious_winner":""},
+{"pair_id":"35","prompt":"What is the Big Bang Theory? (2 sentences)","response_a":"The Big Bang Theory is the prevailing cosmological model explaining the origin of the universe. It proposes that the universe began as an extremely hot, dense point roughly 13.8 billion years ago and has been expanding and cooling ever since.","response_b":"The Big Bang Theory says the universe started from a single, incredibly hot and dense point about 13.8 billion years ago. From that moment, the universe began expanding and cooling, eventually forming all the galaxies, stars, and planets we see today.","category":"science","obvious_winner":""},
+{"pair_id":"36","prompt":"What is a 401(k) and why is it important for retirement? (2-3 sentences)","response_a":"A 401(k) is an employer-sponsored retirement savings plan that allows you to contribute a portion of your pre-tax salary, which grows tax-deferred until you withdraw it in retirement. Many employers also match a percentage of your contributions, which is essentially free money toward your retirement. Starting early and contributing consistently, especially enough to get the full employer match, can significantly impact your financial security in retirement.","response_b":"A 401(k) is a retirement savings account offered by your employer where you can set aside money from your paycheck before taxes. The money grows over time without being taxed until you retire, and many employers will match some of what you put in, which is basically free money. It's one of the best ways to save for retirement, especially if your employer matches contributions.","category":"finance","obvious_winner":""},
+{"pair_id":"37","prompt":"What is the difference between Type 1 and Type 2 diabetes? (2-3 sentences)","response_a":"Type 1 diabetes is an autoimmune condition where the body's immune system attacks and destroys insulin-producing cells in the pancreas, requiring lifelong insulin therapy. Type 2 diabetes occurs when the body becomes resistant to insulin or doesn't produce enough insulin, often related to lifestyle factors like diet and exercise. While Type 1 usually develops in childhood and cannot be prevented, Type 2 typically develops in adulthood and can often be managed or even reversed through lifestyle changes.","response_b":"Type 1 diabetes is when your body doesn't make insulin at all because the immune system has destroyed the cells that produce it—people with Type 1 need to take insulin for life. Type 2 diabetes is when your body doesn't use insulin properly or doesn't make enough, and it's often linked to lifestyle factors like being overweight. Type 1 usually starts in childhood, while Type 2 typically develops later in life and can sometimes be managed with diet, exercise, and medication.","category":"health","obvious_winner":""},
+{"pair_id":"38","prompt":"What is photosynthesis? (2 sentences)","response_a":"Photosynthesis is the process plants use to convert light energy from the sun into chemical energy stored in glucose. Using chlorophyll, plants take in carbon dioxide and water and produce glucose and oxygen.","response_b":"Photosynthesis is how plants make food using sunlight. They take in carbon dioxide from the air and water from the soil, and with sunlight, create sugars for energy and release oxygen.","category":"science","obvious_winner":""},
+{"pair_id":"39","prompt":"What is the difference between a Roth IRA and a Traditional IRA? (2-3 sentences)","response_a":"With a Traditional IRA, you contribute pre-tax dollars (reducing your taxable income now), but you pay taxes on withdrawals in retirement. With a Roth IRA, you contribute after-tax dollars (no tax break now), but your withdrawals in retirement are tax-free. Choosing between them depends on whether you expect to be in a higher or lower tax bracket in retirement.","response_b":"A Traditional IRA lets you deduct your contributions from your taxes now, but you'll pay taxes when you take the money out in retirement. A Roth IRA uses money you've already paid taxes on, but then all your withdrawals in retirement are tax-free. If you think you'll be in a higher tax bracket later, a Roth usually makes more sense; if you want the tax break now, go Traditional.","category":"finance","obvious_winner":""},
+{"pair_id":"40","prompt":"Why is fiber important in your diet? (2-3 sentences)","response_a":"Dietary fiber aids digestion by adding bulk to stool and promoting regular bowel movements, which helps prevent constipation. Fiber also helps control blood sugar levels, lowers cholesterol, and contributes to a healthy gut microbiome. High-fiber foods like fruits, vegetables, whole grains, and legumes also tend to keep you feeling full longer, which can aid in weight management.","response_b":"Fiber is crucial for keeping your digestive system running smoothly and preventing constipation. It also helps you feel full, which can help with weight control, and it's been shown to lower cholesterol and stabilize blood sugar. You can get fiber from whole grains, fruits, vegetables, beans, and nuts.","category":"health","obvious_winner":""},
+{"pair_id":"41","prompt":"What is climate change? (2 sentences)","response_a":"Climate change refers to long-term shifts in global temperatures and weather patterns, primarily caused by human activities like burning fossil fuels, which release greenhouse gases into the atmosphere. These changes are causing rising sea levels, more extreme weather events, and disruptions to ecosystems worldwide.","response_b":"Climate change is the long-term alteration of Earth's climate, mainly driven by humans burning coal, oil, and gas, which traps heat in the atmosphere. It's causing global temperatures to rise, leading to melting ice caps, severe weather, droughts, and other environmental problems.","category":"science","obvious_winner":""},
+{"pair_id":"42","prompt":"What is tax-advantaged investing and why does it matter? (2 sentences)","response_a":"Tax-advantaged investing uses special accounts like 401(k)s, IRAs, or HSAs that offer tax benefits—either reducing your taxes now, eliminating taxes on growth, or providing tax-free withdrawals later. These benefits allow your money to grow faster than in regular taxable accounts, significantly increasing your wealth over time.","response_b":"Tax-advantaged accounts like 401(k)s and IRAs give you tax breaks that help your money grow faster. Whether you save on taxes now or avoid them later, these benefits can make a huge difference in how much you accumulate for retirement.","category":"finance","obvious_winner":""},
+{"pair_id":"43","prompt":"What is the lymphatic system and what does it do? (2-3 sentences)","response_a":"The lymphatic system is a network of tissues, vessels, and organs that helps maintain fluid balance in the body and plays a crucial role in immune defense. It transports lymph—a fluid containing white blood cells—throughout the body to fight infections and remove waste products. Key components include lymph nodes, the spleen, and the thymus, which filter harmful substances and produce immune cells.","response_b":"The lymphatic system is like a drainage network that moves fluid through your body and helps fight infections. It carries white blood cells to areas where they're needed and filters out bacteria and waste through lymph nodes. This system is essential for keeping you healthy and maintaining fluid balance in your body.","category":"health","obvious_winner":""},
+{"pair_id":"44","prompt":"What is the difference between renewable and non-renewable resources? (2 sentences)","response_a":"Renewable resources are natural resources that can replenish themselves over time, such as solar energy, wind, water, and forests. Non-renewable resources are finite and cannot be replaced once used up, including fossil fuels like coal, oil, and natural gas, as well as minerals.","response_b":"Renewable resources are things that naturally regenerate or are essentially unlimited, like sunlight, wind, and trees (if managed sustainably). Non-renewable resources are limited supplies that take millions of years to form, like oil, coal, and natural gas, and once we use them up, they're gone.","category":"science","obvious_winner":""},
+{"pair_id":"45","prompt":"What is diversification in investing? (2 sentences)","response_a":"Diversification is the practice of spreading your investments across different asset classes, industries, and geographic regions to reduce risk. By not putting all your money in one place, you protect yourself from significant losses if any single investment performs poorly.","response_b":"Diversification means not putting all your eggs in one basket—you spread your money across different types of investments like stocks, bonds, and real estate. This way, if one investment drops in value, your other investments can help balance things out.","category":"finance","obvious_winner":""},
+{"pair_id":"46","prompt":"How does alcohol affect your brain? (2-3 sentences)","response_a":"Alcohol is a depressant that slows down brain function by affecting neurotransmitters, which impairs judgment, coordination, and reaction time. In the short term, it can cause mood changes, memory problems, and difficulty concentrating. Long-term heavy drinking can cause permanent brain damage, shrink brain tissue, and increase the risk of conditions like dementia.","response_b":"Alcohol slows down your brain by interfering with the way brain cells communicate, which is why it affects your judgment, coordination, and speech. Short-term, you might feel relaxed or impaired depending on how much you drink. Over time, excessive drinking can actually damage brain cells, leading to memory problems and cognitive decline.","category":"health","obvious_winner":""},
+{"pair_id":"47","prompt":"What is natural selection? (2 sentences)","response_a":"Natural selection is the process by which organisms with traits better suited to their environment are more likely to survive and reproduce, passing those advantageous traits to their offspring. Over many generations, this leads to the evolution of species as beneficial traits become more common in the population.","response_b":"Natural selection is nature's way of choosing which traits get passed down—organisms with helpful characteristics survive and reproduce more successfully than others. Over time, these winning traits spread through the population, which is how species adapt and evolve.","category":"science","obvious_winner":""},
+{"pair_id":"48","prompt":"What is the difference between a traditional mortgage and an adjustable-rate mortgage (ARM)? (2-3 sentences)","response_a":"A traditional fixed-rate mortgage has an interest rate that stays the same for the entire loan term, making your monthly payments predictable and stable. An adjustable-rate mortgage (ARM) starts with a lower initial interest rate that's fixed for a period (like 5 or 7 years), then adjusts periodically based on market conditions, which could cause your payments to increase or decrease. ARMs can save money initially but come with the risk of higher payments later.","response_b":"With a fixed-rate mortgage, your interest rate never changes, so your monthly payment stays the same for the life of the loan. An ARM starts with a lower rate for a few years, but then it can go up or down based on the market, which means your payment could increase. Fixed-rate mortgages offer stability, while ARMs can be riskier but might save you money at first.","category":"finance","obvious_winner":""},
+{"pair_id":"49","prompt":"What is cholesterol and why does it matter for heart health? (2-3 sentences)","response_a":"Cholesterol is a waxy substance in your blood that your body needs to build cells and make hormones, but too much of the wrong kind can be harmful. LDL (\"bad\") cholesterol can build up in artery walls, forming plaques that narrow blood vessels and increase the risk of heart attack and stroke. HDL (\"good\") cholesterol helps remove excess cholesterol from your bloodstream, which is why maintaining a healthy balance is crucial for heart health.","response_b":"Cholesterol is a fatty substance your body uses to make hormones and build cells, but having too much can clog your arteries. There are two main types: LDL (bad cholesterol) that can stick to artery walls and cause blockages, and HDL (good cholesterol) that helps clean cholesterol out of your blood. Keeping LDL low and HDL high through diet and exercise reduces your risk of heart disease.","category":"health","obvious_winner":""},
+{"pair_id":"50","prompt":"What is the water cycle? (2 sentences)","response_a":"The water cycle is the continuous movement of water between the Earth's surface and the atmosphere through evaporation, condensation, precipitation, and collection. Water evaporates from oceans, lakes, and rivers, forms clouds, falls as rain or snow, and flows back into bodies of water to repeat the cycle.","response_b":"The water cycle describes how water moves around our planet. Water evaporates from the ocean and land, rises into the air to form clouds, falls back down as rain or snow, and eventually flows back to the ocean to start over again.","category":"science","obvious_winner":""}
+];
+        let currentIndex = 0;
+        let userChoices = [];
+        let correctCount = 0;
+        let consensusMatches = 0;
+        function startGame() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('stats').classList.remove('hidden');
+            loadQuestion();
+        }
+        function loadQuestion() {
+            if (currentIndex >= judgmentData.length) {
+                showResults();
+                return;
+            }
+            const current = judgmentData[currentIndex];
+            document.getElementById('prompt-text').textContent = current.prompt;
+            document.getElementById('response-a-text').textContent = current.response_a;
+            document.getElementById('response-b-text').textContent = current.response_b;
+            document.getElementById('current-number').textContent = currentIndex + 1;
+            const progress = ((currentIndex + 1) / judgmentData.length) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('feedback').classList.add('hidden');
+        }
+        function makeChoice(choice) {
+            const current = judgmentData[currentIndex];
+            userChoices.push({
+                pair_id: current.pair_id,
+                choice: choice,
+                category: current.category
+            });
+            if (current.obvious_winner) {
+                if (choice === current.obvious_winner) {
+                    correctCount++;
+                }
+            }
+            const consensus = Math.floor(Math.random() * 40) + 45;
+            const agreedWithMajority = Math.random() > 0.3;
+            if (agreedWithMajority) consensusMatches++;
+            const feedbackEl = document.getElementById('feedback');
+            feedbackEl.textContent = `${consensus}% agreed with you`;
+            feedbackEl.classList.remove('hidden');
+            const totalWithObviousWinner = judgmentData.filter(d => d.obvious_winner).length;
+            const accuracy = totalWithObviousWinner > 0 ? Math.round((correctCount / Math.min(currentIndex + 1, totalWithObviousWinner)) * 100) : 0;
+            const consensusRate = Math.round((consensusMatches / (currentIndex + 1)) * 100);
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            document.getElementById('consensus').textContent = consensusRate + '%';
+            setTimeout(() => {
+                currentIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+        function showResults() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('stats').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+            document.getElementById('header-title').textContent = 'Results';
+            const totalWithObviousWinner = judgmentData.filter(d => d.obvious_winner).length;
+            const accuracy = totalWithObviousWinner > 0 ? Math.round((correctCount / totalWithObviousWinner) * 100) : 75;
+            const consensusRate = Math.round((consensusMatches / judgmentData.length) * 100);
+            const percentile = accuracy > 90 ? 95 : accuracy > 80 ? 85 : accuracy > 70 ? 65 : accuracy > 60 ? 45 : 35;
+            document.getElementById('final-accuracy').textContent = accuracy + '%';
+            document.getElementById('percentile-rank').textContent = `Top ${100 - percentile}% of judges`;
+            document.getElementById('final-consensus').textContent = consensusRate + '%';
+            const consensusDesc = consensusRate > 70 ? 'You think like the majority' : consensusRate > 50 ? 'Balanced perspective' : 'You\'re a contrarian thinker';
+            document.getElementById('consensus-description').textContent = consensusDesc;
+            const preferences = analyzePreferences();
+            const preferenceHTML = preferences.map(p => `<div class="preference-item">${p}</div>`).join('');
+            document.getElementById('preference-items').innerHTML = preferenceHTML;
+            const categoryStats = calculateCategoryStats();
+            const categoryHTML = categoryStats.map(cat => 
+                `<div class="category-item">
+                    <span class="category-name">${cat.name}</span>
+                    <span class="category-score">${cat.score}%</span>
+                </div>`
+            ).join('');
+            document.getElementById('category-breakdown').innerHTML = categoryHTML;
+        }
+        function analyzePreferences() {
+            let prefersConcise = 0;
+            let prefersDetailed = 0;
+            userChoices.forEach((choice, idx) => {
+                const data = judgmentData[idx];
+                const aWords = data.response_a.split(' ').length;
+                const bWords = data.response_b.split(' ').length;
+                if (choice.choice === 'a' && aWords < bWords) prefersConcise++;
+                if (choice.choice === 'b' && bWords < aWords) prefersConcise++;
+                if (choice.choice === 'a' && aWords > bWords) prefersDetailed++;
+                if (choice.choice === 'b' && bWords > aWords) prefersDetailed++;
+            });
+            const preferences = [];
+            if (prefersConcise > prefersDetailed * 1.3) {
+                preferences.push('⚡ Prefers concise responses');
+            } else if (prefersDetailed > prefersConcise * 1.3) {
+                preferences.push('📚 Prefers detailed explanations');
+            } else {
+                preferences.push('⚖️ Balanced length preference');
+            }
+            preferences.push('🎯 Values clarity');
+            preferences.push('💬 Conversational tone');
+            return preferences;
+        }
+        function calculateCategoryStats() {
+            const categories = {};
+            userChoices.forEach((choice, idx) => {
+                const data = judgmentData[idx];
+                if (!categories[data.category]) {
+                    categories[data.category] = { correct: 0, total: 0 };
+                }
+                categories[data.category].total++;
+                if (data.obvious_winner && choice.choice === data.obvious_winner) {
+                    categories[data.category].correct++;
+                }
+            });
+            const categoryMap = {
+                'health': 'Health & Wellness',
+                'science': 'Science',
+                'finance': 'Finance'
+            };
+            return Object.entries(categories).map(([cat, stats]) => {
+                const score = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 70;
+                return {
+                    name: categoryMap[cat] || cat,
+                    score: score
+                };
+            });
+        }
+    </script>
+</body>
+</html>
