@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Judgment Game</title>
+    <title>AI Judgment Training</title>
     <style>
         * {
             margin: 0;
@@ -80,8 +80,13 @@
         .welcome-screen p {
             font-size: 18px;
             color: #718096;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             line-height: 1.6;
+        }
+        .welcome-screen .subtext {
+            font-size: 16px;
+            color: #a0aec0;
+            margin-bottom: 30px;
         }
         .prompt {
             background: #f8f9fa;
@@ -191,7 +196,26 @@
         .results-screen h2 {
             font-size: 28px;
             color: #2d3748;
+            margin-bottom: 20px;
+        }
+        .contribution-message {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
             margin-bottom: 30px;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .contribution-message h3 {
+            font-size: 18px;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .contribution-message p {
+            font-size: 15px;
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 10px;
         }
         .results-grid {
             display: grid;
@@ -272,7 +296,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2 id="header-title">AI Judgment Game</h2>
+            <h2 id="header-title">AI Judgment Training</h2>
             <div class="progress-bar">
                 <div class="progress-fill" id="progress-fill"></div>
             </div>
@@ -293,9 +317,10 @@
         </div>
         <div class="content">
             <div id="welcome-screen" class="welcome-screen">
-                <h1>Test Your AI Judgment</h1>
-                <p>Make 50 rapid judgments on AI responses. See how you rank against others.</p>
-                <p style="font-size: 16px; color: #a0aec0;">Takes about 10-15 minutes</p>
+                <h1>Help Train Better AI</h1>
+                <p>Judge AI responses and see how your intuition compares to others. Your choices help improve AI systems.</p>
+                <p style="font-size: 17px; color: #667eea; font-weight: 600; margin-bottom: 10px;">Top judges unlock paid tasks.</p>
+                <p class="subtext">Takes 10-15 minutes • 50 quick decisions</p>
                 <button class="button" onclick="startGame()">Start Test</button>
             </div>
             <div id="game-screen" class="hidden">
@@ -319,6 +344,13 @@
             </div>
             <div id="results-screen" class="results-screen hidden">
                 <h2>You completed 50 judgments!</h2>
+                
+                <div class="contribution-message">
+                    <h3>Thanks for Contributing!</h3>
+                    <p>Your 50 judgments help train better AI models. Companies use this data to improve their systems.</p>
+                    <p style="color: #667eea; font-weight: 600;">Keep practicing to unlock expert-level paid tasks.</p>
+                </div>
+
                 <div class="results-grid">
                     <div class="result-card">
                         <h3>Overall Accuracy</h3>
@@ -454,98 +486,4 @@
             }
             
             const totalAnswered = currentIndex + 1 - skipCount;
-            const totalWithObviousWinner = judgmentData.slice(0, currentIndex + 1).filter(d => d.obvious_winner).length;
-            const accuracy = totalWithObviousWinner > 0 ? Math.round((correctCount / totalWithObviousWinner) * 100) : 0;
-            const consensusRate = totalAnswered > 0 ? Math.round((consensusMatches / totalAnswered) * 100) : 0;
-            document.getElementById('accuracy').textContent = accuracy + '%';
-            document.getElementById('consensus').textContent = consensusRate + '%';
-            setTimeout(() => {
-                currentIndex++;
-                loadQuestion();
-            }, 1200);
-        }
-        function showResults() {
-            document.getElementById('game-screen').classList.add('hidden');
-            document.getElementById('stats').classList.add('hidden');
-            document.getElementById('results-screen').classList.remove('hidden');
-            document.getElementById('header-title').textContent = 'Results';
-            const totalAnswered = judgmentData.length - skipCount;
-            const totalWithObviousWinner = judgmentData.filter(d => d.obvious_winner).length;
-            const accuracy = totalWithObviousWinner > 0 ? Math.round((correctCount / totalWithObviousWinner) * 100) : 75;
-            const consensusRate = totalAnswered > 0 ? Math.round((consensusMatches / totalAnswered) * 100) : 50;
-            const skipRate = Math.round((skipCount / judgmentData.length) * 100);
-            const percentile = accuracy > 90 ? 95 : accuracy > 80 ? 85 : accuracy > 70 ? 65 : accuracy > 60 ? 45 : 35;
-            document.getElementById('final-accuracy').textContent = accuracy + '%';
-            document.getElementById('percentile-rank').textContent = `Top ${100 - percentile}% of judges`;
-            document.getElementById('skip-rate').textContent = skipRate + '%';
-            const skipDesc = skipRate < 10 ? 'Very decisive' : skipRate < 20 ? 'Mostly confident' : skipRate < 30 ? 'Thoughtfully selective' : 'Cautious decision-maker';
-            document.getElementById('skip-description').textContent = skipDesc;
-            document.getElementById('final-consensus').textContent = consensusRate + '%';
-            const consensusDesc = consensusRate > 70 ? 'You think like the majority' : consensusRate > 50 ? 'Balanced perspective' : 'You\'re a contrarian thinker';
-            document.getElementById('consensus-description').textContent = consensusDesc;
-            const preferences = analyzePreferences();
-            const preferenceHTML = preferences.map(p => `<div class="preference-item">${p}</div>`).join('');
-            document.getElementById('preference-items').innerHTML = preferenceHTML;
-            const categoryStats = calculateCategoryStats();
-            const categoryHTML = categoryStats.map(cat => 
-                `<div class="category-item">
-                    <span class="category-name">${cat.name}</span>
-                    <span class="category-score">${cat.score}%</span>
-                </div>`
-            ).join('');
-            document.getElementById('category-breakdown').innerHTML = categoryHTML;
-        }
-        function analyzePreferences() {
-            let prefersConcise = 0;
-            let prefersDetailed = 0;
-            userChoices.forEach((choice, idx) => {
-                if (choice.choice === 'skip') return;
-                const data = judgmentData[idx];
-                const aWords = data.response_a.split(' ').length;
-                const bWords = data.response_b.split(' ').length;
-                if (choice.choice === 'a' && aWords < bWords) prefersConcise++;
-                if (choice.choice === 'b' && bWords < aWords) prefersConcise++;
-                if (choice.choice === 'a' && aWords > bWords) prefersDetailed++;
-                if (choice.choice === 'b' && bWords > aWords) prefersDetailed++;
-            });
-            const preferences = [];
-            if (prefersConcise > prefersDetailed * 1.3) {
-                preferences.push('⚡ Prefers concise responses');
-            } else if (prefersDetailed > prefersConcise * 1.3) {
-                preferences.push('📚 Prefers detailed explanations');
-            } else {
-                preferences.push('⚖️ Balanced length preference');
-            }
-            preferences.push('🎯 Values clarity');
-            preferences.push('💬 Conversational tone');
-            return preferences;
-        }
-        function calculateCategoryStats() {
-            const categories = {};
-            userChoices.forEach((choice, idx) => {
-                if (choice.choice === 'skip') return;
-                const data = judgmentData[idx];
-                if (!categories[data.category]) {
-                    categories[data.category] = { correct: 0, total: 0 };
-                }
-                categories[data.category].total++;
-                if (data.obvious_winner && choice.choice === data.obvious_winner) {
-                    categories[data.category].correct++;
-                }
-            });
-            const categoryMap = {
-                'health': 'Health & Wellness',
-                'science': 'Science',
-                'finance': 'Finance'
-            };
-            return Object.entries(categories).map(([cat, stats]) => {
-                const score = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 70;
-                return {
-                    name: categoryMap[cat] || cat,
-                    score: score
-                };
-            });
-        }
-    </script>
-</body>
-</html>
+            const totalWith
